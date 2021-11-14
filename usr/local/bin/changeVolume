@@ -1,0 +1,27 @@
+#!/bin/bash
+
+function send_notification() {
+	volume=$(amixer sget Master | grep 'Right:' | awk -F'[][]' '{ print $2 }')
+	dunstify -a "changevolume" -u low -r "9993" -h int:value:"$volume" -i "volume-$1" "Volume: ${volume}" -t 2000
+}
+
+case $1 in
+up)
+	# Set the volume on (if it was muted)
+	amixer set Master unmute
+	amixer set Master 5%+
+	send_notification $1
+	;;
+down)
+	amixer set Master 5%-
+	send_notification $1
+	;;
+toggle)
+	amixer set Master toggle
+	if [ $(amixer sget Master | grep 'Right:' | awk -F '[][]' '{ print $4 }') == 'off' ]; then
+		dunstify -i volume-mute -a "changevolume" -t 2000 -r 9993 -u low "Muted"
+	else
+		send_notification up
+	fi
+	;;
+esac
